@@ -6,6 +6,9 @@ import com.matt.forgehax.log.FileManager;
 import com.matt.forgehax.mods.services.MainMenuGuiService.CommandInputGui;
 import com.matt.forgehax.util.command.CommandGlobal;
 import com.matt.forgehax.util.mod.loader.ModManager;
+import java.awt.Toolkit;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
 import java.util.Optional;
 import java.util.Scanner;
 import javax.annotation.Nullable;
@@ -212,5 +215,20 @@ public class Helper implements Globals {
         () -> {
           if (getWorld() != null && getLocalPlayer() != null) MC.renderGlobal.loadRenderers();
         });
+  }
+
+  public static class Clipboard {
+      public static void setString(String stringIn) {
+          StringSelection selection = new StringSelection(stringIn);
+          Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, null);
+      }
+
+      public static String getString() {
+          try {
+              return (String)Toolkit.getDefaultToolkit()
+                  .getSystemClipboard().getData(DataFlavor.stringFlavor);
+          } catch (Exception e) {}
+          return "";
+      }
   }
 }

@@ -1,11 +1,10 @@
 package com.matt.forgehax.mods;
 
 import com.matt.forgehax.Helper;
+import com.matt.forgehax.Helper.Clipboard;
 import com.matt.forgehax.util.mod.Category;
 import com.matt.forgehax.util.mod.ToggleMod;
 import com.matt.forgehax.util.mod.loader.RegisterMod;
-import java.awt.*;
-import java.awt.datatransfer.StringSelection;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntitySign;
 import net.minecraft.util.math.RayTraceResult;
@@ -18,7 +17,7 @@ import org.lwjgl.input.Mouse;
 @RegisterMod
 public class SignTextMod extends ToggleMod {
   public SignTextMod() {
-    super(Category.MISC, "SignText", false, "get sign text");
+    super(Category.MISC, "SignText", false, "copy sign text");
   }
 
   @SubscribeEvent
@@ -32,34 +31,42 @@ public class SignTextMod extends ToggleMod {
         if (tileEntity instanceof TileEntitySign) {
           TileEntitySign sign = (TileEntitySign) tileEntity;
 
-          int signTextLength = 0;
+          int signLines = 0;
           // find the first line from the bottom that isn't empty
           for (int i = 3; i >= 0; i--) {
             if (!sign.signText[i].getUnformattedText().isEmpty()) {
-              signTextLength = i + 1;
+              signLines = i + 1;
               break;
             }
           }
-          if (signTextLength == 0) return; // if the sign is empty don't do anything
+          if (signLines == 0) {
+              Helper.printInform("Sign is empty!");
+              return; // if the sign is empty don't do anything
+          }
 
-          String[] lines = new String[signTextLength];
+          String[] lines = new String[signLines];
 
-          for (int i = 0; i < signTextLength; i++) {
+          for (int i = 0; i < signLines; i++) {
             lines[i] =
                 sign.signText[i].getFormattedText().replace(TextFormatting.RESET.toString(), "");
           }
 
           String fullText = String.join("\n", lines);
 
-          Helper.printMessage("Copied sign");
-          setClipboardString(fullText);
+          Helper.printInform(
+              String.format("Copied sign text, length %d (%d/%d/%d/%d)",
+                  fullText.length(),
+                  sign.signText[0].getUnformattedText().length(),
+                  sign.signText[1].getUnformattedText().length(),
+                  sign.signText[2].getUnformattedText().length(),
+                  sign.signText[3].getUnformattedText().length()
+              )
+          );
+          Clipboard.setString(fullText);
         }
       }
     }
   }
 
-  private static void setClipboardString(String stringIn) {
-    StringSelection selection = new StringSelection(stringIn);
-    Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, null);
-  }
+
 }
