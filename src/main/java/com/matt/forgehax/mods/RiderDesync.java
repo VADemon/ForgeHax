@@ -13,6 +13,7 @@ import com.matt.forgehax.util.mod.ToggleMod;
 import com.matt.forgehax.util.mod.loader.RegisterMod;
 import net.minecraft.entity.Entity;
 import net.minecraft.network.play.client.CPacketVehicleMove;
+import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
@@ -29,9 +30,20 @@ public class RiderDesync extends ToggleMod {
 
   private Entity dismountedEntity = null;
   private boolean forceUpdate = false;
+  private Vec3d dismountPos = Vec3d.ZERO;
 
   public RiderDesync() {
     super(Category.PLAYER, "RiderDesync", false, "For entity force dismounting");
+  }
+
+  @Override
+  public String getDisplayText() {
+    if (dismountedEntity != null && dismountPos != Vec3d.ZERO) {
+      return String.format("%s[%.1fb]", super.getDisplayText(),
+        getLocalPlayer().getPositionEyes(1f).distanceTo(dismountPos));
+    } else {
+      return super.getDisplayText();
+    }
   }
 
   @Override
@@ -65,7 +77,7 @@ public class RiderDesync extends ToggleMod {
           dismountedEntity.isDead = false;
           getWorld().spawnEntity(dismountedEntity);
           getLocalPlayer().startRiding(dismountedEntity);
-
+          dismountPos = Vec3d.ZERO;
           printInform("Remounted entity " + dismountedEntity.getName());
         }))
         .build();
@@ -92,6 +104,7 @@ public class RiderDesync extends ToggleMod {
           }
 
           dismountedEntity = mounted;
+          dismountPos = dismountedEntity.getPositionEyes(1f);
           getLocalPlayer().dismountRidingEntity();
           getWorld().removeEntity(mounted);
 
@@ -134,6 +147,7 @@ public class RiderDesync extends ToggleMod {
         .processor(data -> MC.addScheduledTask(() -> {
           this.dismountedEntity = null;
           this.forceUpdate = false;
+          this.dismountPos = Vec3d.ZERO;
           printInform("Saved riding entity reset");
         }))
         .build();
@@ -144,6 +158,7 @@ public class RiderDesync extends ToggleMod {
     if(dismountedEntity == null || getLocalPlayer().isRiding()) {
       this.dismountedEntity = null;
       this.forceUpdate = false;
+      this.dismountPos = Vec3d.ZERO;
       return;
     }
 
@@ -157,5 +172,6 @@ public class RiderDesync extends ToggleMod {
   public void onWorldUnload(WorldEvent.Unload event) {
     this.dismountedEntity = null;
     this.forceUpdate = false;
+    this.dismountPos = Vec3d.ZERO;
   }
 }
